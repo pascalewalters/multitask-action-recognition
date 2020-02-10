@@ -36,7 +36,9 @@ def save_model(model, model_name, epoch, path):
 
 
 def train_phase(train_dataloader, optimizer, criterions, epoch):
-    criterion_final_score = criterions['criterion_final_score']; penalty_final_score = criterions['penalty_final_score']
+    if with_score_regression:
+        criterion_final_score = criterions['criterion_final_score']; 
+        penalty_final_score = criterions['penalty_final_score']
     if with_dive_classification:
         criterion_dive_classifier = criterions['criterion_dive_classifier']
     if with_caption:
@@ -44,7 +46,8 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
 
     model_CNN.train()
     model_my_fc6.train()
-    model_score_regressor.train()
+    if with_score_regression:
+        model_score_regressor.train()
     if with_dive_classification:
         model_dive_classifier.train()
     if with_caption:
@@ -52,7 +55,8 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
 
     iteration = 0
     for data in train_dataloader:
-        true_final_score = data['label_final_score'].unsqueeze_(1).type(torch.FloatTensor).cuda()
+        if with_score_regression:
+            true_final_score = data['label_final_score'].unsqueeze_(1).type(torch.FloatTensor).cuda()
         if with_dive_classification:
             true_postion = data['label_position'].cuda()
             true_armstand = data['label_armstand'].cuda()
@@ -77,17 +81,19 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
 
         sample_feats_fc6 = model_my_fc6(clip_feats_avg)
 
-        pred_final_score = model_score_regressor(sample_feats_fc6)
+        if with_score_regression:
+            pred_final_score = model_score_regressor(sample_feats_fc6)
         if with_dive_classification:
             (pred_position, pred_armstand, pred_rot_type, pred_ss_no,
              pred_tw_no) = model_dive_classifier(sample_feats_fc6)
         if with_caption:
             seq_probs, _ = model_caption(clip_feats, true_captions, 'train')
 
-        loss_final_score = (criterion_final_score(pred_final_score, true_final_score)
-                            + penalty_final_score(pred_final_score, true_final_score))
         loss = 0
-        loss += loss_final_score
+        if with_score_regression:
+            loss_final_score = (criterion_final_score(pred_final_score, true_final_score)
+                            + penalty_final_score(pred_final_score, true_final_score))
+            loss += loss_final_score
         if with_dive_classification:
             loss_position = criterion_dive_classifier(pred_position, true_postion)
             loss_armstand = criterion_dive_classifier(pred_armstand, true_armstand)
@@ -105,7 +111,9 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
         optimizer.step()
 
         if iteration % 20 == 0:
-            print('Epoch: ', epoch, ' Iter: ', iteration, ' Loss: ', loss, ' FS Loss: ', loss_final_score, end="")
+            print('Epoch: ', epoch, ' Iter: ', iteration, ' Loss: ', loss, end="")
+            if with_score_regression:
+                print(' FS Loss: ', loss_final_score, end="")
             if with_dive_classification:
                   print(' Cls Loss: ', loss_cls, end="")
             if with_caption:
@@ -117,21 +125,24 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
 def test_phase(test_dataloader):
     print('In testphase...')
     with torch.no_grad():
-        pred_scores = []; true_scores = []
+        if with_score_regression:
+            pred_scores = []; true_scores = []
         if with_dive_classification:
             pred_position = []; pred_armstand = []; pred_rot_type = []; pred_ss_no = []; pred_tw_no = []
             true_position = []; true_armstand = []; true_rot_type = []; true_ss_no = []; true_tw_no = []
 
         model_CNN.eval()
         model_my_fc6.eval()
-        model_score_regressor.eval()
+        if with_score_regression:
+            model_score_regressor.eval()
         if with_dive_classification:
             model_dive_classifier.eval()
         if with_caption:
             model_caption.eval()
 
         for data in test_dataloader:
-            true_scores.extend(data['label_final_score'].data.numpy())
+            if with_score_regression:
+                true_scores.extend(data['label_final_score'].data.numpy())
             if with_dive_classification:
                 true_position.extend(data['label_position'].numpy())
                 true_armstand.extend(data['label_armstand'].numpy())
@@ -152,8 +163,9 @@ def test_phase(test_dataloader):
             clip_feats_avg = clip_feats.mean(1)
 
             sample_feats_fc6 = model_my_fc6(clip_feats_avg)
-            temp_final_score = model_score_regressor(sample_feats_fc6)
-            pred_scores.extend([element[0] for element in temp_final_score.data.cpu().numpy()])
+            if with_score_regression:
+                temp_final_score = model_score_regressor(sample_feats_fc6)
+                pred_scores.extend([element[0] for element in temp_final_score.data.cpu().numpy()])
             if with_dive_classification:
                 temp_position, temp_armstand, temp_rot_type, temp_ss_no, temp_tw_no = model_dive_classifier(sample_feats_fc6)
                 softmax_layer = nn.Softmax(dim=1)
@@ -191,17 +203,19 @@ def test_phase(test_dataloader):
             print('Accuracies: Position: ', position_accu, ' Armstand: ', armstand_accu, ' Rot_type: ', rot_type_accu,
                   ' SS_no: ', ss_no_accu, ' TW_no: ', tw_no_accu)
 
-        rho, p = stats.spearmanr(pred_scores, true_scores)
-        print('Predicted scores: ', pred_scores)
-        print('True scores: ', true_scores)
-        print('Correlation: ', rho)
+        if with_score_regression:
+            rho, p = stats.spearmanr(pred_scores, true_scores)
+            print('Predicted scores: ', pred_scores)
+            print('True scores: ', true_scores)
+            print('Correlation: ', rho)
 
 
 def main():
-    parameters_2_optimize = (list(model_CNN.parameters()) + list(model_my_fc6.parameters()) +
-                           list(model_score_regressor.parameters()))
-    parameters_2_optimize_named = (list(model_CNN.named_parameters()) + list(model_my_fc6.named_parameters()) +
-                                   list(model_score_regressor.named_parameters()))
+    parameters_2_optimize = (list(model_CNN.parameters()) + list(model_my_fc6.parameters()))
+    parameters_2_optimize_named = (list(model_CNN.named_parameters()) + list(model_my_fc6.named_parameters()))
+    if with_score_regression:
+        parameters_2_optimize = parameters_2_optimize + list(model_score_regressor.parameters())
+        parameters_2_optimize_named = parameters_2_optimize_named + list(model_score_regressor.named_parameters())
     if with_dive_classification:
         parameters_2_optimize = parameters_2_optimize + list(model_dive_classifier.parameters())
         parameters_2_optimize_named = parameters_2_optimize_named + list(model_dive_classifier.named_parameters())
@@ -209,15 +223,15 @@ def main():
         parameters_2_optimize = parameters_2_optimize + list(model_caption.parameters())
         parameters_2_optimize_named = parameters_2_optimize_named + list(model_caption.named_parameters())
 
-    optimizer = optim.Adam(parameters_2_optimize, lr=0.0001)
-    # print('Parameters that will be learnt: ', parameters_2_optimize_named)
+    optimizer = optim.Adam(parameters_2_optimize, lr = 0.0001)
     print('Parameters that will be learnt: ', 'parameters_2_optimize_named')
 
     criterions = {}
-    criterion_final_score = nn.MSELoss()
-    penalty_final_score = nn.L1Loss()
-    criterions['criterion_final_score'] = criterion_final_score
-    criterions['penalty_final_score'] = penalty_final_score
+    if with_score_regression:
+        criterion_final_score = nn.MSELoss()
+        penalty_final_score = nn.L1Loss()
+        criterions['criterion_final_score'] = criterion_final_score
+        criterions['penalty_final_score'] = penalty_final_score
     if with_dive_classification:
         criterion_dive_classifier = nn.CrossEntropyLoss()
         criterions['criterion_dive_classifier'] = criterion_dive_classifier
@@ -242,14 +256,15 @@ def main():
         for param_group in optimizer.param_groups:
             print('Current learning rate: ', param_group['lr'])
 
-        # train_phase(train_dataloader, optimizer, criterions, epoch)
+        train_phase(train_dataloader, optimizer, criterions, epoch)
         # test_phase(test_dataloader)
         test_phase(train_dataloader)
 
         if (epoch+1) % model_ckpt_interval == 0: # save models every 5 epochs
             save_model(model_CNN, 'model_CNN', epoch, saving_dir)
             save_model(model_my_fc6, 'model_my_fc6', epoch, saving_dir)
-            save_model(model_score_regressor, 'model_score_regressor', epoch, saving_dir)
+            if with_score_regression:
+                save_model(model_score_regressor, 'model_score_regressor', epoch, saving_dir)
             if with_dive_classification:
                 save_model(model_dive_classifier, 'model_dive_classifier', epoch, saving_dir)
             if with_caption:
@@ -271,10 +286,11 @@ if __name__ == '__main__':
     model_my_fc6 = my_fc6()
     model_my_fc6.cuda()
 
-    # loading our score regressor
-    model_score_regressor = score_regressor()
-    model_score_regressor = model_score_regressor.cuda()
-    print('Using Final Score Loss')
+    if with_score_regression:
+        # loading our score regressor
+        model_score_regressor = score_regressor()
+        model_score_regressor = model_score_regressor.cuda()
+        print('Using Final Score Loss')
 
     if with_dive_classification:
         # loading our dive classifier

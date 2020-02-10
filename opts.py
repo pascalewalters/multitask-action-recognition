@@ -56,6 +56,7 @@ caption_lstm_lr = 0.0001
 # task 2 include
 with_dive_classification = True
 with_caption = True
+with_score_regression = False
 
 max_epochs = 100
 
