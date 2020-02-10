@@ -89,23 +89,34 @@ class VideoDataset(Dataset):
         transform = transforms.Compose([transforms.CenterCrop(H),
                                         transforms.ToTensor(),
                                         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-        image_list = sorted((glob.glob(os.path.join(dataset_frames_dir,
-                                                    str('{:02d}'.format(self.keys[ix][0])), '*.jpg'))))
+        # FIXME
+        # image_list = sorted((glob.glob(os.path.join(dataset_frames_dir,
+        #                                             str('{:02d}'.format(self.keys[ix][0])), '*.jpg'))))
+        image_list = sorted((glob.glob(os.path.join(dataset_frames_dir, str(self.keys[ix][1]) + '_*.jpg'))))
         end_frame = self.annotations.get(self.keys[ix]).get('end_frame')
         # temporal augmentation
+        # TODO: implement
         if self.mode == 'train':
             temporal_aug_shift = random.randint(temporal_aug_min, temporal_aug_max)
             end_frame = end_frame + temporal_aug_shift
+
+        end_frame = self.annotations.get(self.keys[ix]).get('end_frame')
         start_frame = end_frame - sample_length # presently using sample_length number of frames
+        # start_frame = self.annotations.get(self.keys[ix]).get('start_frame')
 
         # spatial augmentation
         if self.mode == 'train':
             hori_flip = random.randint(0,1)
 
         images = torch.zeros(sample_length, C, H, W)
+        # images = torch.zeros(len(image_list), C, H, W)
         for i in np.arange(0, sample_length):
+            if i == len(image_list):
+                break
+        # for i in np.arange(0, len(image_list)):
             if self.mode == 'train':
-                images[i] = load_image_train(image_list[start_frame+i], hori_flip, transform)
+                # images[i] = load_image_train(image_list[start_frame+i], hori_flip, transform)
+                images[i] = load_image_train(image_list[i], hori_flip, transform)
             if self.mode == 'test':
                 images[i] = load_image(image_list[start_frame+i], transform)
 

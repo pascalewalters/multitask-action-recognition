@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Stuff specific to this repo
+output/
+c3d.pickle
