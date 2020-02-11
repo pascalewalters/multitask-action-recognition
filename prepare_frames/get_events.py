@@ -48,15 +48,15 @@ for index, row in df.iterrows():
 			# run_str = 'ffmpeg -i {} -ss {} -to {} -c copy {}'.format(input_video, start_time, end_time, output_video)
 			# os.system(run_str)
 
-			# for r in rows:
-			# 	r['clip_number'] = vid_count
-			# 	output_df = output_df.append(r)
+			for r in rows:
+				r['clip_number'] = vid_count
+				output_df = output_df.append(r)
 
 			rows = []
 
 			# ffmpeg -i input.mkv -vn audio_only.ogg
 			run_str = 'ffmpeg -i {} -vn {}'.format(output_video, output_audio)
-			os.system(run_str)
+			# os.system(run_str)
 
 			vid_count += 1
 			count = -1
