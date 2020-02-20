@@ -25,7 +25,7 @@ anno_n_splits_dir = dataset_dir + 'train_data'
 dataset_frames_dir = dataset_dir + 'frames/'
 
 # directory for saving output
-saving_dir = 'output/'
+saving_dir = 'output2/'
 
 # sample length in terms of no of frames
 sample_length = 103
@@ -45,7 +45,8 @@ final_score_std = 17
 # maximum caption length
 max_cap_len = 100
 
-vocab_size = 5779
+# vocab_size = 5779
+vocab_size = 2197
 
 caption_lstm_dim_hidden = 512
 caption_lstm_dim_word = 512

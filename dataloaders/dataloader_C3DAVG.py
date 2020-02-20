@@ -83,6 +83,8 @@ class VideoDataset(Dataset):
             self.ix_to_word = info['ix_to_word']
             self.word_to_ix = info['word_to_ix']
             self.max_cap_len = max_cap_len
+            # print(self.word_to_ix['<eos>'])
+            # print(self.word_to_ix['<sos>'])
 
 
     def __getitem__(self, ix):
@@ -129,17 +131,17 @@ class VideoDataset(Dataset):
             label_ss_no = self.annotations.get(self.keys[ix]).get('ss_no')
             label_tw_no = self.annotations.get(self.keys[ix]).get('tw_no')
         if with_hockey_classification:
-            label_switch = int(self.annotations.get(self.keys[ix]).get('SwitchEvent') > 0)
-            label_advance = int(self.annotations.get(self.keys[ix]).get('AdvanceEvent') > 0)
-            label_faceoff = int(self.annotations.get(self.keys[ix]).get('FaceoffEvent') > 0)
-            label_play_make = int(self.annotations.get(self.keys[ix]).get('PlayMakeEvent') > 0)
-            label_play_receive = int(self.annotations.get(self.keys[ix]).get('PlayReceiveEvent') > 0)
-            label_whistle = int(self.annotations.get(self.keys[ix]).get('WhistleEvent') > 0)
-            label_shot = int(self.annotations.get(self.keys[ix]).get('ShotEvent') > 0)
-            label_hit = int(self.annotations.get(self.keys[ix]).get('HitEvent') > 0)
-            label_shot_block = int(self.annotations.get(self.keys[ix]).get('ShotBlockEvent') > 0)
-            label_penalty = int(self.annotations.get(self.keys[ix]).get('PenaltyEvent') > 0)
-            label_ricochet = int(self.annotations.get(self.keys[ix]).get('RicochetEvent') > 0)
+            label_switch = self.annotations.get(self.keys[ix]).get('SwitchEvent')
+            label_advance = self.annotations.get(self.keys[ix]).get('AdvanceEvent')
+            label_faceoff = self.annotations.get(self.keys[ix]).get('FaceoffEvent')
+            label_play_make = self.annotations.get(self.keys[ix]).get('PlayMakeEvent')
+            label_play_receive = self.annotations.get(self.keys[ix]).get('PlayReceiveEvent')
+            label_whistle = self.annotations.get(self.keys[ix]).get('WhistleEvent')
+            label_shot = self.annotations.get(self.keys[ix]).get('ShotEvent')
+            label_hit = self.annotations.get(self.keys[ix]).get('HitEvent')
+            label_shot_block = self.annotations.get(self.keys[ix]).get('ShotBlockEvent')
+            label_penalty = self.annotations.get(self.keys[ix]).get('PenaltyEvent')
+            label_ricochet = self.annotations.get(self.keys[ix]).get('RicochetEvent')
 
         if self.mode == 'train':
             if with_caption:

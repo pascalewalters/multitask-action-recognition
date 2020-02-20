@@ -22,17 +22,17 @@ class hockey_classifier(nn.Module):
         super(hockey_classifier, self).__init__()
 
         # First attempt: binary classification for each event type
-        self.fc_switch = nn.Linear(4096, 2)
-        self.fc_advance = nn.Linear(4096, 2)
-        self.fc_faceoff = nn.Linear(4096, 2)
-        self.fc_play_make = nn.Linear(4096, 2)
-        self.fc_play_receive = nn.Linear(4096, 2)
-        self.fc_whistle = nn.Linear(4096, 2)
-        self.fc_shot = nn.Linear(4096, 2)
-        self.fc_hit = nn.Linear(4096, 2)
-        self.fc_shot_block = nn.Linear(4096, 2)
-        self.fc_penalty = nn.Linear(4096, 2)
-        self.fc_ricochet = nn.Linear(4096, 2)
+        self.fc_switch = nn.Linear(4096, 10)
+        self.fc_advance = nn.Linear(4096, 10)
+        self.fc_faceoff = nn.Linear(4096, 10)
+        self.fc_play_make = nn.Linear(4096, 10)
+        self.fc_play_receive = nn.Linear(4096, 10)
+        self.fc_whistle = nn.Linear(4096, 10)
+        self.fc_shot = nn.Linear(4096, 10)
+        self.fc_hit = nn.Linear(4096, 10)
+        self.fc_shot_block = nn.Linear(4096, 10)
+        self.fc_penalty = nn.Linear(4096, 10)
+        self.fc_ricochet = nn.Linear(4096, 10)
 
 
     def forward(self, x):
