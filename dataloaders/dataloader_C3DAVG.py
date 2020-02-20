@@ -26,7 +26,7 @@ torch.backends.cudnn.deterministic=True
 
 
 def load_image_train(image_path, hori_flip, transform=None):
-    image = Image.open(image_path)
+    image = Image.open(image_path).convert('RGB')
     size = input_resize
     interpolator_idx = random.randint(0,3)
     interpolators = [Image.NEAREST, Image.BILINEAR, Image.BICUBIC, Image.LANCZOS]
@@ -92,24 +92,24 @@ class VideoDataset(Dataset):
         # FIXME
         # image_list = sorted((glob.glob(os.path.join(dataset_frames_dir,
         #                                             str('{:02d}'.format(self.keys[ix][0])), '*.jpg'))))
-        image_list = sorted((glob.glob(os.path.join(dataset_frames_dir, str(self.keys[ix][1]) + '_*.jpg'))))
-        end_frame = self.annotations.get(self.keys[ix]).get('end_frame')
+        # image_list = sorted((glob.glob(os.path.join(dataset_frames_dir, str(self.keys[ix][1]) + '_*.jpg'))))
+        image_list = sorted((glob.glob(os.path.join(dataset_frames_dir, '*_' + str(self.keys[ix]).zfill(4) + '_*.jpg'))))
+
         # temporal augmentation
         # TODO: implement
-        if self.mode == 'train':
-            temporal_aug_shift = random.randint(temporal_aug_min, temporal_aug_max)
-            end_frame = end_frame + temporal_aug_shift
+        # if self.mode == 'train':
+        #     temporal_aug_shift = random.randint(temporal_aug_min, temporal_aug_max)
+        #     end_frame = end_frame + temporal_aug_shift
 
-        end_frame = self.annotations.get(self.keys[ix]).get('end_frame')
-        start_frame = end_frame - sample_length # presently using sample_length number of frames
-        # start_frame = self.annotations.get(self.keys[ix]).get('start_frame')
+        # end_frame = self.annotations.get(self.keys[ix]).get('end_frame')
+        # start_frame = end_frame - sample_length # presently using sample_length number of frames
+        # # start_frame = self.annotations.get(self.keys[ix]).get('start_frame')
 
         # spatial augmentation
         if self.mode == 'train':
             hori_flip = random.randint(0,1)
 
         images = torch.zeros(sample_length, C, H, W)
-        # images = torch.zeros(len(image_list), C, H, W)
         for i in np.arange(0, sample_length):
             if i == len(image_list):
                 break
@@ -120,12 +120,27 @@ class VideoDataset(Dataset):
             if self.mode == 'test':
                 images[i] = load_image(image_list[start_frame+i], transform)
 
-        label_final_score = self.annotations.get(self.keys[ix]).get('final_score')
-        label_position = self.annotations.get(self.keys[ix]).get('position')
-        label_armstand = self.annotations.get(self.keys[ix]).get('armstand')
-        label_rot_type = self.annotations.get(self.keys[ix]).get('rotation_type')
-        label_ss_no = self.annotations.get(self.keys[ix]).get('ss_no')
-        label_tw_no = self.annotations.get(self.keys[ix]).get('tw_no')
+        if with_score_regression:
+            label_final_score = self.annotations.get(self.keys[ix]).get('final_score')
+        if with_dive_classification:
+            label_position = self.annotations.get(self.keys[ix]).get('position')
+            label_armstand = self.annotations.get(self.keys[ix]).get('armstand')
+            label_rot_type = self.annotations.get(self.keys[ix]).get('rotation_type')
+            label_ss_no = self.annotations.get(self.keys[ix]).get('ss_no')
+            label_tw_no = self.annotations.get(self.keys[ix]).get('tw_no')
+        if with_hockey_classification:
+            label_switch = int(self.annotations.get(self.keys[ix]).get('SwitchEvent') > 0)
+            label_advance = int(self.annotations.get(self.keys[ix]).get('AdvanceEvent') > 0)
+            label_faceoff = int(self.annotations.get(self.keys[ix]).get('FaceoffEvent') > 0)
+            label_play_make = int(self.annotations.get(self.keys[ix]).get('PlayMakeEvent') > 0)
+            label_play_receive = int(self.annotations.get(self.keys[ix]).get('PlayReceiveEvent') > 0)
+            label_whistle = int(self.annotations.get(self.keys[ix]).get('WhistleEvent') > 0)
+            label_shot = int(self.annotations.get(self.keys[ix]).get('ShotEvent') > 0)
+            label_hit = int(self.annotations.get(self.keys[ix]).get('HitEvent') > 0)
+            label_shot_block = int(self.annotations.get(self.keys[ix]).get('ShotBlockEvent') > 0)
+            label_penalty = int(self.annotations.get(self.keys[ix]).get('PenaltyEvent') > 0)
+            label_ricochet = int(self.annotations.get(self.keys[ix]).get('RicochetEvent') > 0)
+
         if self.mode == 'train':
             if with_caption:
                 ########## loading captions ############
@@ -140,13 +155,31 @@ class VideoDataset(Dataset):
                 for j, w in enumerate(captions):
                     label_captions[j] = self.word_to_ix[w]
                 label_captions_non_zero = (label_captions == 0).nonzero()
-                label_captions_mask[:int(label_captions_non_zero[0][0]) + 1] = 1
+                if len(label_captions_non_zero[0]) == 0:
+                    label_captions_mask = np.ones(self.max_cap_len)
+                else:
+                    label_captions_mask[:int(label_captions_non_zero[0][0]) + 1] = 1
 
         data = {}
         data['video'] = images
-        data['label_position'] = label_position; data['label_armstand'] = label_armstand
-        data['label_rot_type'] = label_rot_type; data['label_ss_no'] = label_ss_no; data['label_tw_no'] = label_tw_no
-        data['label_final_score'] = label_final_score/final_score_std
+        if with_score_regression:
+            data['label_final_score'] = label_final_score/final_score_std
+        if with_dive_classification:
+            data['label_position'] = label_position; data['label_armstand'] = label_armstand
+            data['label_rot_type'] = label_rot_type; data['label_ss_no'] = label_ss_no; data['label_tw_no'] = label_tw_no
+        if with_hockey_classification:
+            data['label_switch'] = label_switch
+            data['label_advance'] = label_advance
+            data['label_faceoff'] = label_faceoff
+            data['label_play_make'] = label_play_make
+            data['label_play_receive'] = label_play_receive
+            data['label_whistle'] = label_whistle
+            data['label_shot'] = label_shot
+            data['label_hit'] = label_hit
+            data['label_shot_block'] = label_shot_block
+            data['label_penalty'] = label_penalty
+            data['label_ricochet'] = label_ricochet
+        
         if self.mode == 'train':
             if with_caption:
                 ########## caption stuff #############

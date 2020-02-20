@@ -55,7 +55,7 @@ class RewardCriterion(nn.Module):
 class LanguageModelCriterion(nn.Module):
     def __init__(self):
         super(LanguageModelCriterion, self).__init__()
-        self.loss_fn = nn.NLLLoss(reduce=False)
+        self.loss_fn = nn.NLLLoss(reduction = 'none')
 
 
     def forward(self, logits, target, mask):

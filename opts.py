@@ -13,13 +13,16 @@
 randomseed = 0
 
 # directory containing dataset annotation files; this anno_n_splits_dir make the full path
-dataset_dir = '/home/pascale/Documents/courses/CS886/MTL-AQA/MTL-AQA_dataset_release/Ready_2_Use/'
+# dataset_dir = '/home/pascale/Documents/courses/CS886/MTL-AQA/MTL-AQA_dataset_release/Ready_2_Use/'
+dataset_dir = '/home/pascale/Documents/courses/CS886/output_clips/'
 
 # directory tp store train/test split lists and annotations
-anno_n_splits_dir = dataset_dir + 'smaller_training_sets/size_140/'
+# anno_n_splits_dir = dataset_dir + 'smaller_training_sets/size_140/'
+anno_n_splits_dir = dataset_dir + 'train_data'
 
 # directory containing extracted frames
-dataset_frames_dir = anno_n_splits_dir + 'frames/'
+# dataset_frames_dir = anno_n_splits_dir + 'frames/'
+dataset_frames_dir = dataset_dir + 'frames/'
 
 # directory for saving output
 saving_dir = 'output/'
@@ -31,7 +34,7 @@ sample_length = 103
 C, H, W = 3,112,112
 # C, H, W = 3,180,180#3,112,112#
 # image resizing dims; C3D-AVG: 171,128; MSCADC: 640,360
-input_resize = 171,128
+input_resize = 171, 128
 # input_resize = 640,360#171,128#
 # temporal augmentation range
 temporal_aug_min = -3; temporal_aug_max = 3
@@ -54,7 +57,8 @@ caption_lstm_dropout = 0.5
 caption_lstm_lr = 0.0001
 
 # task 2 include
-with_dive_classification = True
+with_dive_classification = False
+with_hockey_classification = True
 with_caption = True
 with_score_regression = False
 
