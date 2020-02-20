@@ -34,5 +34,5 @@ for i in range(last_clip):
 
 	hockey_annotations_dict[i] = annotations_dict
 
-with open('/home/pascale/Documents/courses/CS886/output_clips/train_data/annotations_dict.pkl', 'wb') as f:
-	pickle.dump(annotations_dict, f)
+with open('/home/pascale/Documents/courses/CS886/output_clips/train_data/final_annotations_dict.pkl', 'wb') as f:
+	pickle.dump(hockey_annotations_dict, f)

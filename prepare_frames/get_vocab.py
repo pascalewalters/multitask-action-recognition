@@ -7,15 +7,15 @@ final_captions_dict = json.load(open(dataset_dir + 'vocab.json'))
 
 # print(len(final_captions_dict['ix_to_word'].keys()))
 
-captions_dict = pd.read_pickle('/home/pascale/Documents/courses/CS886/output_clips/train_data/captions_dict.pkl')
+captions_dict = pd.read_pickle('/home/pascale/Documents/courses/CS886/output_clips/train_data/final_captions_dict.pkl')
 
 vocab = set()
 
 for v in captions_dict.values():
 	vocab.update(v)
 
-vocab.remove('<eos>')
-vocab.remove('<sos>')
+# vocab.remove('<eos>')
+# vocab.remove('<sos>')
 
 ix_to_word = {}
 word_to_ix = {}
