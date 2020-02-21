@@ -99,13 +99,18 @@ class VideoDataset(Dataset):
 
         # temporal augmentation
         # TODO: implement
+        # end_frame = self.annotations.get(self.keys[ix]).get('end_frame')
+
+        end_frame = int(image_list[-1].replace('.jpg', '').split('_')[-1])
+
         # if self.mode == 'train':
         #     temporal_aug_shift = random.randint(temporal_aug_min, temporal_aug_max)
         #     end_frame = end_frame + temporal_aug_shift
 
-        # end_frame = self.annotations.get(self.keys[ix]).get('end_frame')
         # start_frame = end_frame - sample_length # presently using sample_length number of frames
         # # start_frame = self.annotations.get(self.keys[ix]).get('start_frame')
+
+        count = end_frame // sample_length
 
         # spatial augmentation
         if self.mode == 'train':
@@ -118,9 +123,12 @@ class VideoDataset(Dataset):
         # for i in np.arange(0, len(image_list)):
             if self.mode == 'train':
                 # images[i] = load_image_train(image_list[start_frame+i], hori_flip, transform)
-                images[i] = load_image_train(image_list[i], hori_flip, transform)
+                images[i] = load_image_train(image_list[i * count], hori_flip, transform)
+                images[i] = load_image_train(image_list[i * count], hori_flip, transform)
             if self.mode == 'test':
-                images[i] = load_image(image_list[start_frame+i], transform)
+                # images[i] = load_image(image_list[start_frame+i], transform)
+                images[i] = load_image_train(image_list[i * count], transform)
+
 
         if with_score_regression:
             label_final_score = self.annotations.get(self.keys[ix]).get('final_score')

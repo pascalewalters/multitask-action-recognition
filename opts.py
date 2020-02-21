@@ -28,7 +28,8 @@ dataset_frames_dir = dataset_dir + 'frames/'
 saving_dir = 'output2/'
 
 # sample length in terms of no of frames
-sample_length = 103
+# sample_length = 103
+sample_length = 110
 
 # input data dims; C3D-AVG:112; MSCADC: 180
 C, H, W = 3,112,112
