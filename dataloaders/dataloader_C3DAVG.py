@@ -110,24 +110,30 @@ class VideoDataset(Dataset):
         # start_frame = end_frame - sample_length # presently using sample_length number of frames
         # # start_frame = self.annotations.get(self.keys[ix]).get('start_frame')
 
-        count = end_frame // sample_length
+        # print(start_frame, end_frame)
+        # exit()
+
+        count = int(end_frame / 5) // sample_length
 
         # spatial augmentation
         if self.mode == 'train':
             hori_flip = random.randint(0,1)
 
-        images = torch.zeros(sample_length, C, H, W)
-        for i in np.arange(0, sample_length):
-            if i == len(image_list):
-                break
-        # for i in np.arange(0, len(image_list)):
-            if self.mode == 'train':
-                # images[i] = load_image_train(image_list[start_frame+i], hori_flip, transform)
-                images[i] = load_image_train(image_list[i * count], hori_flip, transform)
-                images[i] = load_image_train(image_list[i * count], hori_flip, transform)
-            if self.mode == 'test':
-                # images[i] = load_image(image_list[start_frame+i], transform)
-                images[i] = load_image_train(image_list[i * count], transform)
+        if len(image_list) >= sample_length:
+            images = torch.zeros(sample_length, C, H, W)
+            for i in np.arange(0, sample_length):
+                if i == len(image_list):
+                    break
+            # for i in np.arange(0, len(image_list)):
+                if self.mode == 'train':
+                    # images[i] = load_image_train(image_list[start_frame+i], hori_flip, transform)
+                    images[i] = load_image_train(image_list[i * count], hori_flip, transform)
+                if self.mode == 'test':
+                    # images[i] = load_image(image_list[start_frame+i], transform)
+                    images[i] = load_image(image_list[i * count], transform)
+        else:
+            print('Sample length is too short')
+            exit()
 
 
         if with_score_regression:
@@ -150,25 +156,37 @@ class VideoDataset(Dataset):
             label_shot_block = self.annotations.get(self.keys[ix]).get('ShotBlockEvent')
             label_penalty = self.annotations.get(self.keys[ix]).get('PenaltyEvent')
             label_ricochet = self.annotations.get(self.keys[ix]).get('RicochetEvent')
+        if with_caption:
+            label_switch = self.annotations.get(self.keys[ix]).get('SwitchEvent')
+            label_advance = self.annotations.get(self.keys[ix]).get('AdvanceEvent')
+            label_faceoff = self.annotations.get(self.keys[ix]).get('FaceoffEvent')
+            label_play_make = self.annotations.get(self.keys[ix]).get('PlayMakeEvent')
+            label_play_receive = self.annotations.get(self.keys[ix]).get('PlayReceiveEvent')
+            label_whistle = self.annotations.get(self.keys[ix]).get('WhistleEvent')
+            label_shot = self.annotations.get(self.keys[ix]).get('ShotEvent')
+            label_hit = self.annotations.get(self.keys[ix]).get('HitEvent')
+            label_shot_block = self.annotations.get(self.keys[ix]).get('ShotBlockEvent')
+            label_penalty = self.annotations.get(self.keys[ix]).get('PenaltyEvent')
+            label_ricochet = self.annotations.get(self.keys[ix]).get('RicochetEvent')
 
-        if self.mode == 'train':
-            if with_caption:
-                ########## loading captions ############
-                label_captions = np.zeros(self.max_cap_len)
-                label_captions_mask = np.zeros(self.max_cap_len)
-                captions = self.captions.get(self.keys[ix])
-                if captions is None:
-                    print('Fault in caps for: ', self.keys[ix])
-                if len(captions) > self.max_cap_len:
-                    captions = captions[:self.max_cap_len]
-                captions[-1] = '<eos>'
-                for j, w in enumerate(captions):
-                    label_captions[j] = self.word_to_ix[w]
-                label_captions_non_zero = (label_captions == 0).nonzero()
-                if len(label_captions_non_zero[0]) == 0:
-                    label_captions_mask = np.ones(self.max_cap_len)
-                else:
-                    label_captions_mask[:int(label_captions_non_zero[0][0]) + 1] = 1
+        # if self.mode == 'train':
+        if with_caption:
+            ########## loading captions ############
+            label_captions = np.zeros(self.max_cap_len)
+            label_captions_mask = np.zeros(self.max_cap_len)
+            captions = self.captions.get(self.keys[ix])
+            if captions is None:
+                print('Fault in caps for: ', self.keys[ix])
+            if len(captions) > self.max_cap_len:
+                captions = captions[:self.max_cap_len]
+            captions[-1] = '<eos>'
+            for j, w in enumerate(captions):
+                label_captions[j] = self.word_to_ix[w]
+            label_captions_non_zero = (label_captions == 0).nonzero()
+            if len(label_captions_non_zero[0]) == 0:
+                label_captions_mask = np.ones(self.max_cap_len)
+            else:
+                label_captions_mask[:int(label_captions_non_zero[0][0]) + 1] = 1
 
         data = {}
         data['video'] = images
@@ -189,12 +207,24 @@ class VideoDataset(Dataset):
             data['label_shot_block'] = label_shot_block
             data['label_penalty'] = label_penalty
             data['label_ricochet'] = label_ricochet
+        if with_caption:
+            data['label_switch'] = label_switch
+            data['label_advance'] = label_advance
+            data['label_faceoff'] = label_faceoff
+            data['label_play_make'] = label_play_make
+            data['label_play_receive'] = label_play_receive
+            data['label_whistle'] = label_whistle
+            data['label_shot'] = label_shot
+            data['label_hit'] = label_hit
+            data['label_shot_block'] = label_shot_block
+            data['label_penalty'] = label_penalty
+            data['label_ricochet'] = label_ricochet
         
-        if self.mode == 'train':
-            if with_caption:
-                ########## caption stuff #############
-                data['label_captions'] = torch.from_numpy(label_captions).type(torch.LongTensor)
-                data['label_captions_mask'] = torch.from_numpy(label_captions_mask).type(torch.FloatTensor)
+        # if self.mode == 'train':
+        if with_caption:
+            ########## caption stuff #############
+            data['label_captions'] = torch.from_numpy(label_captions).type(torch.LongTensor)
+            data['label_captions_mask'] = torch.from_numpy(label_captions_mask).type(torch.FloatTensor)
         return data
 
 
