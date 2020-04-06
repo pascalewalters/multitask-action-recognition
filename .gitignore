@@ -131,3 +131,5 @@ dmypy.json
 # Stuff specific to this repo
 output/
 c3d.pickle
+output*/
+losses*
