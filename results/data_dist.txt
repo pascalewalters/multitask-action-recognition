@@ -1,0 +1,24 @@
+Unique events: ['FaceoffEvent' 'SwitchEvent' 'PlayMakeEvent' 'PlayReceiveEvent'
+ 'ShotEvent' 'WhistleEvent' 'AdvanceEvent' 'ShotBlockEvent' 'HitEvent'
+ 'PenaltyEvent' 'RicochetEvent']
+PlayMakeEvent       864
+PlayReceiveEvent    864
+SwitchEvent         584
+ShotEvent           144
+AdvanceEvent        128
+FaceoffEvent         79
+HitEvent             79
+WhistleEvent         68
+ShotBlockEvent       42
+PenaltyEvent          7
+RicochetEvent         1
+Name: eventable_type, dtype: int64
+Number of clips: 285
+Average clip length: 22.557894736842105
+Maximum clip length: 181.0
+Minimum clip length: 4.0
+
+Train: 198
+Test: 86
+
+Videos are originally 30 fps, downsample to 6 fps

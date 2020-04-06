@@ -1,0 +1,157 @@
+Test 1: use only training dataset from 1 video, binary classification for all event types, didn't get the vocabulary length correct, 10 epochs, all video clips are just the first 103 frames
+
+switch_correct: 95.07042253521126
+advance_correct: 61.97183098591549
+faceoff_correct: 76.40845070422534
+play_make_correct: 99.64788732394366
+play_receive_correct: 99.64788732394366
+whistle_correct: 76.76056338028168
+shot_correct: 58.45070422535211
+hit_correct: 76.05633802816901
+shot_block_correct: 85.56338028169014
+penalty_correct: 97.88732394366197
+ricochet_correct: 99.64788732394366
+
+
+Test 2: use training dataset from 1 video, classification for each event type (1-10), 10 epochs, all video clips are just the first 103 frames
+
+switch_correct: 40.49295774647887
+advance_correct: 61.97183098591549
+faceoff_correct: 76.40845070422534
+play_make_correct: 42.95774647887324
+play_receive_correct: 45.42253521126761
+whistle_correct: 76.76056338028168
+shot_correct: 58.45070422535211
+hit_correct: 76.05633802816901
+shot_block_correct: 85.56338028169014
+penalty_correct: 97.88732394366197
+ricochet_correct: 99.64788732394366
+
+Test 3: use training dataset from 1 video, classification for each event type (0-9), 10 epochs, frames are sampled over the whole video at even intervals to get a total of 110 frames
+
+switch_correct: 42.25352112676056
+advance_correct: 70.07042253521126
+faceoff_correct: 93.30985915492957
+play_make_correct: 54.22535211267606
+play_receive_correct: 50.70422535211267
+whistle_correct: 95.77464788732394
+shot_correct: 64.08450704225352
+hit_correct: 76.05633802816901
+shot_block_correct: 85.91549295774648
+penalty_correct: 97.88732394366197
+ricochet_correct: 99.64788732394366
+
+Test 4: use training dataset from 1 video, classification for each event type (0-9), 10 epochs, frames are sampled over the whole video at even intervals to get a total of 110 frames, without captioning
+
+switch_correct: 41.54929577464789
+advance_correct: 68.66197183098592
+faceoff_correct: 92.95774647887323
+play_make_correct: 49.647887323943664
+play_receive_correct: 46.478873239436616
+whistle_correct: 95.77464788732394
+shot_correct: 64.7887323943662
+hit_correct: 76.05633802816901
+shot_block_correct: 85.56338028169014
+penalty_correct: 97.88732394366197
+ricochet_correct: 99.64788732394366
+
+Test 5: use training dataset from 1 video, classification for each event type (0-9), 10 epochs, frames are sampled over the whole video at even intervals to get a total of 110 frames, caption_lstm_cell_type = 'lstm'
+
+switch_correct: 43.66197183098591
+advance_correct: 70.07042253521126
+faceoff_correct: 92.6056338028169
+play_make_correct: 53.16901408450704
+play_receive_correct: 49.647887323943664
+whistle_correct: 95.77464788732394
+shot_correct: 61.267605633802816
+hit_correct: 76.05633802816901
+shot_block_correct: 85.56338028169014
+penalty_correct: 97.88732394366197
+ricochet_correct: 99.64788732394366
+
+Test 6: use training dataset from 1 video, classification for each event type (0-9), 10 epochs, store every 5 frames, sample_length = 25, use ground truth caption as input to testing?
+
+switch_correct: 43.309859154929576
+advance_correct: 67.25352112676056
+faceoff_correct: 92.6056338028169
+play_make_correct: 57.04225352112676
+play_receive_correct: 50.352112676056336
+whistle_correct: 96.12676056338029
+shot_correct: 65.14084507042254
+hit_correct: 76.05633802816901
+shot_block_correct: 86.26760563380282
+penalty_correct: 97.88732394366197
+ricochet_correct: 99.64788732394366
+
+Test 7: 
+
+switch_correct: 40.49295774647887
+advance_correct: 61.97183098591549
+faceoff_correct: 81.69014084507043
+play_make_correct: 26.408450704225352
+play_receive_correct: 41.19718309859155
+whistle_correct: 84.15492957746478
+shot_correct: 58.45070422535211
+hit_correct: 30.985915492957744
+shot_block_correct: 85.56338028169014
+penalty_correct: 97.88732394366197
+ricochet_correct: 99.64788732394366
+
+Test 8: 100 epochs
+
+switch_correct: 100.0
+advance_correct: 100.0
+faceoff_correct: 100.0
+play_make_correct: 100.0
+play_receive_correct: 100.0
+whistle_correct: 100.0
+shot_correct: 100.0
+hit_correct: 100.0
+shot_block_correct: 100.0
+penalty_correct: 100.0
+ricochet_correct: 100.0
+BLEU score: 6.897228206403508e-156
+
+Test 9: 100 epochs, random train test split
+switch_correct: 30.23255813953488
+advance_correct: 61.627906976744185
+faceoff_correct: 91.86046511627907
+play_make_correct: 33.72093023255814
+play_receive_correct: 31.3953488372093
+whistle_correct: 94.18604651162791
+shot_correct: 48.837209302325576
+hit_correct: 61.627906976744185
+shot_block_correct: 80.23255813953489
+penalty_correct: 96.51162790697676
+ricochet_correct: 100.0
+BLEU score: 6.3841436621849004e-232
+
+Test 10: 100 epochs, include GT captions in loss during testing
+switch_correct: 30.23255813953488
+advance_correct: 61.627906976744185
+faceoff_correct: 91.86046511627907
+play_make_correct: 33.72093023255814
+play_receive_correct: 31.3953488372093
+whistle_correct: 94.18604651162791
+shot_correct: 48.837209302325576
+hit_correct: 61.627906976744185
+shot_block_correct: 80.23255813953489
+penalty_correct: 96.51162790697676
+ricochet_correct: 100.0
+BLEU score: 6.323869535550941e-232
+
+Test 11: 100 epochs, only use visual input
+switch_correct: 30.23255813953488
+advance_correct: 66.27906976744185
+faceoff_correct: 88.37209302325581
+play_make_correct: 41.86046511627907
+play_receive_correct: 39.53488372093023
+whistle_correct: 93.02325581395348
+shot_correct: 47.674418604651166
+hit_correct: 67.44186046511628
+shot_block_correct: 80.23255813953489
+penalty_correct: 97.67441860465115
+ricochet_correct: 100.0
+
+
+
