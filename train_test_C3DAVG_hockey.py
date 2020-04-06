@@ -26,12 +26,16 @@ from models.C3DAVG.S2VTModel import S2VTModel
 from opts import *
 from utils import utils_1
 import numpy as np
+import matplotlib.pyplot as plt
 
 torch.manual_seed(randomseed); torch.cuda.manual_seed_all(randomseed); random.seed(randomseed); np.random.seed(randomseed)
 torch.backends.cudnn.deterministic=True
 
 
 def save_model(model, model_name, epoch, path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
     model_path = os.path.join(path, '%s_%d.pth' % (model_name, epoch))
     torch.save(model.state_dict(), model_path)
 
@@ -45,6 +49,7 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
     if with_hockey_classification:
         criterion_hockey_classifier = criterions['criterion_hockey_classifier']
     if with_caption:
+        # criterion_hockey_classifier = criterions['criterion_hockey_classifier']
         criterion_caption = criterions['criterion_caption']
 
     model_CNN.train()
@@ -89,6 +94,7 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
         clip_feats = torch.Tensor([]).cuda()
 
         for i in np.arange(0, frames - 17, 16):
+        # for i in np.arange(frames):
             clip = video[:, :, i:i + 16, :, :]
             clip_feats_temp = model_CNN(clip)
             clip_feats_temp.unsqueeze_(0)
@@ -108,7 +114,9 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
                 pred_play_receive, pred_whistle, pred_shot, pred_hit, 
                 pred_shot_block, pred_penalty, pred_ricochet) = model_hockey_classifier(sample_feats_fc6)
         if with_caption:
-            seq_probs, _ = model_caption(clip_feats, true_captions, 'train')
+            (seq_probs, _, pred_switch, pred_advance, pred_faceoff, pred_play_make, 
+                pred_play_receive, pred_whistle, pred_shot, pred_hit, 
+                pred_shot_block, pred_penalty, pred_ricochet) = model_caption(clip_feats, sample_feats_fc6, true_captions, 'train')
 
         loss = 0
         if with_score_regression:
@@ -140,6 +148,21 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
             loss_cls += loss_shot_block + loss_penalty + loss_ricochet
             loss += loss_cls
         if with_caption:
+            # loss_switch = criterion_hockey_classifier(pred_switch, true_switch)
+            # loss_advance = criterion_hockey_classifier(pred_advance, true_advance)
+            # loss_faceoff = criterion_hockey_classifier(pred_faceoff, true_faceoff)
+            # loss_play_make = criterion_hockey_classifier(pred_play_make, true_play_make)
+            # loss_play_receive = criterion_hockey_classifier(pred_play_receive, true_play_receive)
+            # loss_whistle = criterion_hockey_classifier(pred_whistle, true_whistle)
+            # loss_shot = criterion_hockey_classifier(pred_shot, true_shot)
+            # loss_hit = criterion_hockey_classifier(pred_hit, true_hit)
+            # loss_shot_block = criterion_hockey_classifier(pred_shot_block, true_shot_block)
+            # loss_penalty = criterion_hockey_classifier(pred_penalty, true_penalty)
+            # loss_ricochet = criterion_hockey_classifier(pred_ricochet, true_ricochet)
+            # loss_cls = loss_switch + loss_advance + loss_faceoff + loss_play_make
+            # loss_cls += loss_play_receive + loss_whistle + loss_shot + loss_hit
+            # loss_cls += loss_shot_block + loss_penalty + loss_ricochet
+            # loss += loss_cls
             loss_caption = criterion_caption(seq_probs, true_captions[:, 1:], true_captions_mask[:, 1:])
             loss += loss_caption*0.01
 
@@ -160,6 +183,8 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
             print(' ')
         iteration += 1
 
+    return loss
+
 
 def test_phase(test_dataloader):
     print('In testphase...')
@@ -170,6 +195,13 @@ def test_phase(test_dataloader):
             pred_position = []; pred_armstand = []; pred_rot_type = []; pred_ss_no = []; pred_tw_no = []
             true_position = []; true_armstand = []; true_rot_type = []; true_ss_no = []; true_tw_no = []
         if with_hockey_classification:
+            pred_switch = []; pred_advance = []; pred_faceoff = []; pred_play_make = [] 
+            pred_play_receive = []; pred_whistle = []; pred_shot = []; pred_hit = []
+            pred_shot_block = []; pred_penalty = []; pred_ricochet = []
+            true_switch = []; true_advance = []; true_faceoff = []; true_play_make = []
+            true_play_receive = []; true_whistle = []; true_shot = []; true_hit = []
+            true_shot_block = []; true_penalty = []; true_ricochet = []
+        if with_caption:
             pred_switch = []; pred_advance = []; pred_faceoff = []; pred_play_make = [] 
             pred_play_receive = []; pred_whistle = []; pred_shot = []; pred_hit = []
             pred_shot_block = []; pred_penalty = []; pred_ricochet = []
@@ -198,6 +230,7 @@ def test_phase(test_dataloader):
                 true_ss_no.extend(data['label_ss_no'].numpy())
                 true_tw_no.extend(data['label_tw_no'].numpy())
             if with_hockey_classification:
+            # if with_caption:
                 true_switch.extend(data['label_switch'].numpy())
                 true_advance.extend(data['label_advance'].numpy())
                 true_faceoff.extend(data['label_faceoff'].numpy())
@@ -243,9 +276,15 @@ def test_phase(test_dataloader):
                     pred_tw_no.extend(np.argwhere(temp_tw_no[i] == max(temp_tw_no[i]))[0])
 
             if with_hockey_classification:
+            # if with_caption:
+                # true_captions = data['label_captions'].cuda()
+                # true_captions_mask = data['label_captions_mask'].cuda()
                 (temp_switch, temp_advance, temp_faceoff, temp_play_make, 
                     temp_play_receive, temp_whistle, temp_shot, temp_hit, 
                     temp_shot_block, temp_penalty, temp_ricochet) = model_hockey_classifier(sample_feats_fc6)
+                # (seq_probs, _, temp_switch, temp_advance, temp_faceoff, temp_play_make, 
+                #     temp_play_receive, temp_whistle, temp_shot, temp_hit, 
+                #     temp_shot_block, temp_penalty, temp_ricochet) = model_caption(clip_feats, sample_feats_fc6, true_captions, 'train')
                 softmax_layer = nn.Softmax(dim = 1)
                 temp_switch = softmax_layer(temp_switch).data.cpu().numpy()
                 temp_advance = softmax_layer(temp_advance).data.cpu().numpy()
@@ -294,6 +333,7 @@ def test_phase(test_dataloader):
                   ' SS_no: ', ss_no_accu, ' TW_no: ', tw_no_accu)
 
         if with_hockey_classification:
+        # if with_caption:
             correct_class = {'switch_correct': 0, 'advance_correct': 0, 'faceoff_correct': 0, 'play_make_correct': 0,
                 'play_receive_correct': 0, 'whistle_correct': 0, 'shot_correct': 0, 'hit_correct': 0, 'shot_block_correct': 0, 
                 'penalty_correct': 0, 'ricochet_correct': 0}
@@ -363,28 +403,31 @@ def main():
         criterion_hockey_classifier = nn.CrossEntropyLoss()
         criterions['criterion_hockey_classifier'] = criterion_hockey_classifier
     if with_caption:
+        criterion_hockey_classifier = nn.CrossEntropyLoss()
+        criterions['criterion_hockey_classifier'] = criterion_hockey_classifier
         criterion_caption = utils_1.LanguageModelCriterion()
         criterions['criterion_caption'] = criterion_caption
 
     train_dataset = VideoDataset('train')
-    # test_dataset = VideoDataset('test')
+    test_dataset = VideoDataset('test')
     train_dataloader = DataLoader(train_dataset, batch_size = train_batch_size, shuffle=True)
-    # test_dataloader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False)
     print('Length of train loader: ', len(train_dataloader))
-    # print('Length of test loader: ', len(test_dataloader))
-    # print('Training set size: ', len(train_dataloader)*train_batch_size,
-    #       ';    Test set size: ', len(test_dataloader)*test_batch_size)
-    print('Training set size: ', len(train_dataloader) * train_batch_size)
+    print('Length of test loader: ', len(test_dataloader))
+    print('Training set size: ', len(train_dataloader)*train_batch_size,
+          ';    Test set size: ', len(test_dataloader)*test_batch_size)
+
+    losses = []
 
     # actual training, testing loops
-    for epoch in range(10):
+    for epoch in range(100):
         print('---------------------------------------------------------------------------------')
         for param_group in optimizer.param_groups:
             print('Current learning rate: ', param_group['lr'])
 
-        train_phase(train_dataloader, optimizer, criterions, epoch)
-        # test_phase(test_dataloader)
-        test_phase(train_dataloader)
+        loss = train_phase(train_dataloader, optimizer, criterions, epoch)
+        losses.append(loss.cpu().item())
+        test_phase(test_dataloader)
 
         if (epoch+1) % model_ckpt_interval == 0: # save models every 5 epochs
             save_model(model_CNN, 'model_CNN', epoch, saving_dir)
@@ -397,6 +440,9 @@ def main():
                 save_model(model_hockey_classifier, 'model_hockey_classifier', epoch, saving_dir)
             if with_caption:
                 save_model(model_caption, 'model_caption', epoch, saving_dir)
+
+    plt.plot(range(len(losses)), losses)
+    plt.savefig('losses4.png')
 
 
 
