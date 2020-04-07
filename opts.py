@@ -75,3 +75,18 @@ model_ckpt_interval = 10 # in epochs
 base_learning_rate = 0.0001
 
 temporal_stride = 16
+
+class_occurences = {
+	'PlayMakeEvent':       864,
+	'PlayReceiveEvent':    864,
+	'SwitchEvent':         584,
+	'ShotEvent':           144,
+	'AdvanceEvent':        128,
+	'FaceoffEvent':         79,
+	# 'HitEvent':             79,
+	# 'WhistleEvent':         68,
+	# 'ShotBlockEvent':       42,
+	# 'PenaltyEvent':          7,
+	# 'RicochetEvent':         1
+}
+

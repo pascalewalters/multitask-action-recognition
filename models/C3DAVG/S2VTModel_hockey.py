@@ -49,12 +49,12 @@ class S2VTModel(nn.Module):
         self.fc_faceoff = nn.Linear(4096, 10)
         self.fc_play_make = nn.Linear(4096, 10)
         self.fc_play_receive = nn.Linear(4096, 10)
-        self.fc_whistle = nn.Linear(4096, 10)
+        # self.fc_whistle = nn.Linear(4096, 10)
         self.fc_shot = nn.Linear(4096, 10)
-        self.fc_hit = nn.Linear(4096, 10)
-        self.fc_shot_block = nn.Linear(4096, 10)
-        self.fc_penalty = nn.Linear(4096, 10)
-        self.fc_ricochet = nn.Linear(4096, 10)
+        # self.fc_hit = nn.Linear(4096, 10)
+        # self.fc_shot_block = nn.Linear(4096, 10)
+        # self.fc_penalty = nn.Linear(4096, 10)
+        # self.fc_ricochet = nn.Linear(4096, 10)
 
 
     def forward(self, vid_feats, x, target_variable=None, mode='train', opt={}):
@@ -104,11 +104,12 @@ class S2VTModel(nn.Module):
         faceoff = self.fc_faceoff(x)
         play_make = self.fc_play_make(x)
         play_receive = self.fc_play_receive(x)
-        whistle = self.fc_whistle(x)
+        # whistle = self.fc_whistle(x)
         shot = self.fc_shot(x)
-        hit = self.fc_hit(x)
-        shot_block = self.fc_shot_block(x)
-        penalty = self.fc_penalty(x)
-        ricochet = self.fc_ricochet(x)
+        # hit = self.fc_hit(x)
+        # shot_block = self.fc_shot_block(x)
+        # penalty = self.fc_penalty(x)
+        # ricochet = self.fc_ricochet(x)
 
-        return seq_probs, seq_preds, switch, advance, faceoff, play_make, play_receive, whistle, shot, hit, shot_block, penalty, ricochet
+        # return seq_probs, seq_preds, switch, advance, faceoff, play_make, play_receive, whistle, shot, hit, shot_block, penalty, ricochet
+        return seq_probs, seq_preds, switch, advance, faceoff, play_make, play_receive, shot

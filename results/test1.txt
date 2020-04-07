@@ -153,5 +153,13 @@ shot_block_correct: 80.23255813953489
 penalty_correct: 97.67441860465115
 ricochet_correct: 100.0
 
+Test 12: 100 epochs, visual and commentary input, train/test split, remove infrequent classes, weighted loss function
+switch_correct: 18.6046511627907
+advance_correct: 56.97674418604651
+faceoff_correct: 88.37209302325581
+play_make_correct: 34.883720930232556
+play_receive_correct: 32.55813953488372
+shot_correct: 48.837209302325576
+BLEU score: 7.550891683668373e-156
 
 

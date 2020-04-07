@@ -77,12 +77,12 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
         true_faceoff = data['label_faceoff'].cuda()
         true_play_make = data['label_play_make'].cuda()
         true_play_receive = data['label_play_receive'].cuda()
-        true_whistle = data['label_whistle'].cuda()
+        # true_whistle = data['label_whistle'].cuda()
         true_shot = data['label_shot'].cuda()
-        true_hit = data['label_hit'].cuda() 
-        true_shot_block = data['label_shot_block'].cuda() 
-        true_penalty = data['label_penalty'].cuda() 
-        true_ricochet = data['label_ricochet'].cuda()
+        # true_hit = data['label_hit'].cuda() 
+        # true_shot_block = data['label_shot_block'].cuda() 
+        # true_penalty = data['label_penalty'].cuda() 
+        # true_ricochet = data['label_ricochet'].cuda()
 
         # Captions
         true_captions = data['label_captions'].cuda()
@@ -103,26 +103,36 @@ def train_phase(train_dataloader, optimizer, criterions, epoch):
 
         sample_feats_fc6 = model_my_fc6(clip_feats_avg)
 
+        # (seq_probs, _, pred_switch, pred_advance, pred_faceoff, pred_play_make, 
+        #     pred_play_receive, pred_whistle, pred_shot, pred_hit, 
+        #     pred_shot_block, pred_penalty, pred_ricochet) = model_caption(clip_feats, sample_feats_fc6, true_captions, 'train')
         (seq_probs, _, pred_switch, pred_advance, pred_faceoff, pred_play_make, 
-            pred_play_receive, pred_whistle, pred_shot, pred_hit, 
-            pred_shot_block, pred_penalty, pred_ricochet) = model_caption(clip_feats, sample_feats_fc6, true_captions, 'train')
+            pred_play_receive, pred_shot) = model_caption(clip_feats, sample_feats_fc6, true_captions, 'train')
 
         loss = 0
 
-        loss_switch = criterion_hockey_classifier(pred_switch, true_switch)
-        loss_advance = criterion_hockey_classifier(pred_advance, true_advance)
-        loss_faceoff = criterion_hockey_classifier(pred_faceoff, true_faceoff)
-        loss_play_make = criterion_hockey_classifier(pred_play_make, true_play_make)
-        loss_play_receive = criterion_hockey_classifier(pred_play_receive, true_play_receive)
-        loss_whistle = criterion_hockey_classifier(pred_whistle, true_whistle)
-        loss_shot = criterion_hockey_classifier(pred_shot, true_shot)
-        loss_hit = criterion_hockey_classifier(pred_hit, true_hit)
-        loss_shot_block = criterion_hockey_classifier(pred_shot_block, true_shot_block)
-        loss_penalty = criterion_hockey_classifier(pred_penalty, true_penalty)
-        loss_ricochet = criterion_hockey_classifier(pred_ricochet, true_ricochet)
+        total_occurences = sum(list(class_occurences.values()))
+        class_weights = {}
+        for k, v in class_occurences.items():
+            class_weights[k] = total_occurences / v
+        weights_sum = sum(list(class_weights.values()))
+        for k, v in class_weights.items():
+            class_weights[k] = v / weights_sum
+
+        loss_switch = class_weights['SwitchEvent'] * criterion_hockey_classifier(pred_switch, true_switch)
+        loss_advance = class_weights['AdvanceEvent'] * criterion_hockey_classifier(pred_advance, true_advance)
+        loss_faceoff = class_weights['FaceoffEvent'] * criterion_hockey_classifier(pred_faceoff, true_faceoff)
+        loss_play_make = class_weights['PlayMakeEvent'] * criterion_hockey_classifier(pred_play_make, true_play_make)
+        loss_play_receive = class_weights['PlayReceiveEvent'] * criterion_hockey_classifier(pred_play_receive, true_play_receive)
+        # loss_whistle = criterion_hockey_classifier(pred_whistle, true_whistle)
+        loss_shot = class_weights['ShotEvent'] * criterion_hockey_classifier(pred_shot, true_shot)
+        # loss_hit = criterion_hockey_classifier(pred_hit, true_hit)
+        # loss_shot_block = criterion_hockey_classifier(pred_shot_block, true_shot_block)
+        # loss_penalty = criterion_hockey_classifier(pred_penalty, true_penalty)
+        # loss_ricochet = criterion_hockey_classifier(pred_ricochet, true_ricochet)
         loss_cls = loss_switch + loss_advance + loss_faceoff + loss_play_make
-        loss_cls += loss_play_receive + loss_whistle + loss_shot + loss_hit
-        loss_cls += loss_shot_block + loss_penalty + loss_ricochet
+        loss_cls += loss_play_receive + loss_shot
+        # loss_cls += loss_shot_block + loss_penalty + loss_ricochet
         loss += loss_cls
 
         loss_caption = criterion_caption(seq_probs, true_captions[:, 1:], true_captions_mask[:, 1:])
@@ -168,11 +178,13 @@ def test_phase(test_dataloader):
 
     with torch.no_grad():
         pred_switch = []; pred_advance = []; pred_faceoff = []; pred_play_make = [] 
-        pred_play_receive = []; pred_whistle = []; pred_shot = []; pred_hit = []
-        pred_shot_block = []; pred_penalty = []; pred_ricochet = []
+        pred_play_receive = []; pred_shot = []
+        # pred_whistle = []; pred_hit = []
+        # pred_shot_block = []; pred_penalty = []; pred_ricochet = []
         true_switch = []; true_advance = []; true_faceoff = []; true_play_make = []
-        true_play_receive = []; true_whistle = []; true_shot = []; true_hit = []
-        true_shot_block = []; true_penalty = []; true_ricochet = []
+        true_play_receive = []; true_shot = []
+        # true_whistle = []; true_hit = []
+        # true_shot_block = []; true_penalty = []; true_ricochet = []
         pred_captions = []; true_captions = []; label_captions = []
 
         model_CNN.eval()
@@ -186,12 +198,12 @@ def test_phase(test_dataloader):
             true_faceoff.extend(data['label_faceoff'].numpy())
             true_play_make.extend(data['label_play_make'].numpy())
             true_play_receive.extend(data['label_play_receive'].numpy())
-            true_whistle.extend(data['label_whistle'].numpy())
+            # true_whistle.extend(data['label_whistle'].numpy())
             true_shot.extend(data['label_shot'].numpy())
-            true_hit.extend(data['label_hit'].numpy())
-            true_shot_block.extend(data['label_shot_block'].numpy())
-            true_penalty.extend(data['label_penalty'].numpy())
-            true_ricochet.extend(data['label_ricochet'].numpy())
+            # true_hit.extend(data['label_hit'].numpy())
+            # true_shot_block.extend(data['label_shot_block'].numpy())
+            # true_penalty.extend(data['label_penalty'].numpy())
+            # true_ricochet.extend(data['label_ricochet'].numpy())
 
             # Captions
             true_captions.extend(data['label_captions'].cuda())
@@ -212,9 +224,11 @@ def test_phase(test_dataloader):
 
             sample_feats_fc6 = model_my_fc6(clip_feats_avg)
 
+            # (seq_probs, seq_preds, temp_switch, temp_advance, temp_faceoff, temp_play_make, 
+            #     temp_play_receive, temp_whistle, temp_shot, temp_hit, 
+            #     temp_shot_block, temp_penalty, temp_ricochet) = model_caption(clip_feats, sample_feats_fc6, true_caption, mode = 'train')
             (seq_probs, seq_preds, temp_switch, temp_advance, temp_faceoff, temp_play_make, 
-                temp_play_receive, temp_whistle, temp_shot, temp_hit, 
-                temp_shot_block, temp_penalty, temp_ricochet) = model_caption(clip_feats, sample_feats_fc6, true_caption, mode = 'train')
+                temp_play_receive, temp_shot) = model_caption(clip_feats, sample_feats_fc6, true_caption, mode = 'train')
 
             softmax_layer = nn.Softmax(dim = 1)
             temp_switch = softmax_layer(temp_switch).data.cpu().numpy()
@@ -222,12 +236,12 @@ def test_phase(test_dataloader):
             temp_faceoff = softmax_layer(temp_faceoff).data.cpu().numpy()
             temp_play_make = softmax_layer(temp_play_make).data.cpu().numpy()
             temp_play_receive = softmax_layer(temp_play_receive).data.cpu().numpy()
-            temp_whistle = softmax_layer(temp_whistle).data.cpu().numpy()
+            # temp_whistle = softmax_layer(temp_whistle).data.cpu().numpy()
             temp_shot = softmax_layer(temp_shot).data.cpu().numpy()
-            temp_hit = softmax_layer(temp_hit).data.cpu().numpy()
-            temp_shot_block = softmax_layer(temp_shot_block).data.cpu().numpy()
-            temp_penalty = softmax_layer(temp_penalty).data.cpu().numpy()
-            temp_ricochet = softmax_layer(temp_ricochet).data.cpu().numpy()
+            # temp_hit = softmax_layer(temp_hit).data.cpu().numpy()
+            # temp_shot_block = softmax_layer(temp_shot_block).data.cpu().numpy()
+            # temp_penalty = softmax_layer(temp_penalty).data.cpu().numpy()
+            # temp_ricochet = softmax_layer(temp_ricochet).data.cpu().numpy()
 
             temp_caption = softmax_layer(seq_probs).data.cpu().numpy()
 
@@ -237,21 +251,23 @@ def test_phase(test_dataloader):
                 pred_faceoff.append(np.argmax(temp_faceoff[i]))
                 pred_play_make.append(np.argmax(temp_play_make[i]))
                 pred_play_receive.append(np.argmax(temp_play_receive[i]))
-                pred_whistle.append(np.argmax(temp_whistle[i]))
+                # pred_whistle.append(np.argmax(temp_whistle[i]))
                 pred_shot.append(np.argmax(temp_shot[i]))
-                pred_hit.append(np.argmax(temp_hit[i]))
-                pred_shot_block.append(np.argmax(temp_shot_block[i]))
-                pred_penalty.append(np.argmax(temp_penalty[i]))
-                pred_ricochet.append(np.argmax(temp_ricochet[i]))
+                # pred_hit.append(np.argmax(temp_hit[i]))
+                # pred_shot_block.append(np.argmax(temp_shot_block[i]))
+                # pred_penalty.append(np.argmax(temp_penalty[i]))
+                # pred_ricochet.append(np.argmax(temp_ricochet[i]))
                 # pred_ricochet.extend(np.argwhere(true_ricochet[i] == max(temp_ricochet[i])))
 
                 pred_captions.append(decode_sentence(np.argmax(temp_caption[i], axis = 1)))
                 label_captions.append(decode_sentence(true_captions[i]))
             
 
-        correct_class = {'switch_correct': 0, 'advance_correct': 0, 'faceoff_correct': 0, 'play_make_correct': 0,
-            'play_receive_correct': 0, 'whistle_correct': 0, 'shot_correct': 0, 'hit_correct': 0, 'shot_block_correct': 0, 
-            'penalty_correct': 0, 'ricochet_correct': 0}
+        # correct_class = {'switch_correct': 0, 'advance_correct': 0, 'faceoff_correct': 0, 'play_make_correct': 0,
+        #     'play_receive_correct': 0, 'whistle_correct': 0, 'shot_correct': 0, 'hit_correct': 0, 'shot_block_correct': 0, 
+        #     'penalty_correct': 0, 'ricochet_correct': 0}
+            correct_class = {'switch_correct': 0, 'advance_correct': 0, 'faceoff_correct': 0, 'play_make_correct': 0,
+            'play_receive_correct': 0, 'shot_correct': 0}
         for i in range(len(pred_switch)):
             if pred_switch[i] == true_switch[i]:
                 correct_class['switch_correct'] += 1
@@ -263,18 +279,18 @@ def test_phase(test_dataloader):
                 correct_class['play_make_correct'] += 1
             if pred_play_receive[i] == true_play_receive[i]:
                 correct_class['play_receive_correct'] += 1
-            if pred_whistle[i] == true_whistle[i]:
-                correct_class['whistle_correct'] += 1
+            # if pred_whistle[i] == true_whistle[i]:
+            #     correct_class['whistle_correct'] += 1
             if pred_shot[i] == true_shot[i]:
                 correct_class['shot_correct'] += 1
-            if pred_hit[i] == true_hit[i]:
-                correct_class['hit_correct'] += 1
-            if pred_shot_block[i] == true_shot_block[i]:
-                correct_class['shot_block_correct'] += 1
-            if pred_penalty[i] == true_penalty[i]:
-                correct_class['penalty_correct'] += 1
-            if pred_ricochet[i] == true_ricochet[i]:
-                correct_class['ricochet_correct'] += 1
+            # if pred_hit[i] == true_hit[i]:
+            #     correct_class['hit_correct'] += 1
+            # if pred_shot_block[i] == true_shot_block[i]:
+            #     correct_class['shot_block_correct'] += 1
+            # if pred_penalty[i] == true_penalty[i]:
+            #     correct_class['penalty_correct'] += 1
+            # if pred_ricochet[i] == true_ricochet[i]:
+            #     correct_class['ricochet_correct'] += 1
 
         for k, v in correct_class.items():
             print('{}: {}'.format(k, v / len(pred_switch) * 100))
@@ -322,7 +338,7 @@ def main():
             save_model(model_caption, 'model_caption', epoch, saving_dir)
 
     plt.plot(range(len(losses)), losses)
-    plt.savefig('losses4.png')
+    plt.savefig('losses5.png')
 
 
 if __name__ == '__main__':
