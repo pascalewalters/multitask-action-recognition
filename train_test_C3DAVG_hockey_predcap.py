@@ -1,14 +1,3 @@
-# Author: Paritosh Parmar (https://github.com/ParitoshParmar)
-# Code used in the following, also if you find it useful, please consider citing the following:
-#
-# @inproceedings{parmar2019and,
-#   title={What and How Well You Performed? A Multitask Learning Approach to Action Quality Assessment},
-#   author={Parmar, Paritosh and Tran Morris, Brendan},
-#   booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
-#   pages={304--313},
-#   year={2019}
-# }
-
 import os
 import torch
 from torch.utils.data import DataLoader
@@ -307,6 +296,7 @@ def main():
 
     criterions = {}
     criterion_hockey_classifier = nn.CrossEntropyLoss()
+    # criterion_hockey_classifier = nn.MSELoss()
     criterions['criterion_hockey_classifier'] = criterion_hockey_classifier
     criterion_caption = utils_1.LanguageModelCriterion()
     criterions['criterion_caption'] = criterion_caption
